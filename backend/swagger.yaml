@@ -1,0 +1,53 @@
+openapi: 3.0.0
+info:
+  title: BIITM Quiz Master API
+  version: 1.0.0
+  description: API Documentation for the BIITM Quiz Master Secure Online Examination Platform
+servers:
+  - url: http://localhost:5000/api
+    description: Development server
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+security:
+  - bearerAuth: []
+paths:
+  /admin/login:
+    post:
+      summary: Admin Login
+      tags:
+        - Admin
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  _id:
+                    type: string
+                  username:
+                    type: string
+                  token:
+                    type: string
+        '401':
+          description: Invalid credentials
