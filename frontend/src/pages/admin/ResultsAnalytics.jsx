@@ -54,6 +54,46 @@ const ResultsAnalytics = () => {
     }
   };
 
+  const downloadStudentPdf = async (studentId, rollNumber) => {
+    const toastId = toast.loading('Generating PDF...');
+    try {
+      const response = await api.get(`/results/exam/${examId}/student/${studentId}/pdf`, {
+        responseType: 'blob'
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `Marksheet_${rollNumber}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast.success('PDF downloaded!', { id: toastId });
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to download PDF', { id: toastId });
+    }
+  };
+
+  const downloadStudentExcel = async (studentId, rollNumber) => {
+    const toastId = toast.loading('Generating Excel...');
+    try {
+      const response = await api.get(`/results/exam/${examId}/student/${studentId}/excel`, {
+        responseType: 'blob'
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `Report_${rollNumber}_${exam?.examCode || 'Export'}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast.success('Excel downloaded!', { id: toastId });
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to download Excel', { id: toastId });
+    }
+  };
+
   const handlePublish = async () => {
     try {
       await api.post(`/results/exam/${examId}/publish`, { isPublished: true });
@@ -238,7 +278,7 @@ const ResultsAnalytics = () => {
                   <Button 
                     variant="contained" 
                     startIcon={<DownloadIcon />} 
-                    onClick={() => window.open(`/api/results/exam/${examId}/student/${currentReport.student._id}/pdf`, '_blank')}
+                    onClick={() => downloadStudentPdf(currentReport.student._id, currentReport.student.rollNumber)}
                     sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 'bold', boxShadow: 'none' }}
                   >
                     Export PDF
@@ -246,7 +286,7 @@ const ResultsAnalytics = () => {
                   <Button 
                     variant="outlined" 
                     startIcon={<DownloadIcon />} 
-                    onClick={() => window.open(`/api/results/exam/${examId}/student/${currentReport.student._id}/excel`, '_blank')}
+                    onClick={() => downloadStudentExcel(currentReport.student._id, currentReport.student.rollNumber)}
                     sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 'bold', boxShadow: 'none', bgcolor: 'white' }}
                   >
                     Export Excel

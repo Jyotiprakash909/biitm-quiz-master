@@ -266,10 +266,46 @@ const getLiveStats = async (req, res, next) => {
       if (s.status === 'Disconnected') disconnected++;
     });
 
+    const mappedSessions = sessions.map(s => ({
+      ...s,
+      sessionId: s._id
+    }));
+
     res.json({
       stats: { waiting, active, submitted, autoSubmitted, disconnected },
-      sessions
+      sessions: mappedSessions
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Approve late student session
+// @route   PUT /api/exams/:examId/sessions/:sessionId/approve
+// @access  Private (Admin)
+const approveSession = async (req, res, next) => {
+  try {
+    const Session = require('../models/Session');
+    const session = await Session.findOne({ _id: req.params.sessionId, examId: req.params.examId });
+    if (!session) {
+      res.status(404);
+      throw new Error('Session not found');
+    }
+
+    session.status = 'Active';
+    session.startTime = new Date();
+    session.approvedAt = new Date();
+    session.activityTimeline.push({ event: 'Admin Approved Late Entry' });
+    await session.save();
+
+    // Fire socket event so client can proceed
+    const { getIo } = require('../sockets/socketManager');
+    const io = getIo();
+    if (io) {
+      io.to(session.examId.toString()).emit('student_status_update', { studentId: session.studentId, status: 'Active' });
+    }
+
+    res.json(session);
   } catch (error) {
     next(error);
   }
@@ -284,5 +320,6 @@ module.exports = {
   archiveExam,
   duplicateExam,
   updateExamStatus,
-  getLiveStats
+  getLiveStats,
+  approveSession
 };

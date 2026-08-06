@@ -186,25 +186,45 @@ const exportPdf = async (req, res, next) => {
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename=Marksheet_${student.rollNumber}.pdf`);
 
-    const doc = new PDFDocument({ margin: 50, size: 'A4' });
+    // Using autoFirstPage: false to handle our own header/footer properly on multiple pages if needed
+    const doc = new PDFDocument({ margin: 50, size: 'A4', bufferPages: true });
     doc.pipe(res);
 
-    // Modern Header
+    let logoBuffer = null;
+    if (settings.institutionLogo && settings.institutionLogo.startsWith('data:image/')) {
+      try {
+        const base64Data = settings.institutionLogo.split(',')[1];
+        logoBuffer = Buffer.from(base64Data, 'base64');
+      } catch (e) {
+        console.error('Logo parse error', e);
+      }
+    }
+
     const primaryColor = settings.primaryColor || '#0f172a';
-    doc.rect(0, 0, 595, 120).fill(primaryColor);
-    doc.fillColor('white').fontSize(28).font('Helvetica-Bold').text(settings.institutionName || 'BIITM QUIZ MASTER', 0, 35, { align: 'center', characterSpacing: 2 });
-    doc.fontSize(12).font('Helvetica').text(settings.pdfHeader || 'Secure Online Examination Platform', 0, 70, { align: 'center' });
     
-    doc.moveDown(5);
+    // Draw Header
+    doc.rect(0, 0, 595, 120).fill(primaryColor);
+    
+    if (logoBuffer) {
+      try {
+        // Position logo on the left
+        doc.image(logoBuffer, 50, 30, { fit: [60, 60], align: 'center', valign: 'center' });
+      } catch(e) {}
+    }
+
+    doc.fillColor('white').fontSize(24).font('Helvetica-Bold').text(settings.institutionName || 'BIITM QUIZ MASTER', 0, 35, { align: 'center', characterSpacing: 1 });
+    doc.fontSize(12).font('Helvetica').text(settings.pdfHeader || 'Secure Online Examination Platform', 0, 65, { align: 'center' });
+    
+    doc.moveDown(4);
     doc.fillColor('#0f172a');
 
     // Title
-    doc.fontSize(20).font('Helvetica-Bold').text('OFFICIAL EXAM MARKSHEET', { align: 'center' });
+    doc.fontSize(18).font('Helvetica-Bold').text('OFFICIAL EXAM MARKSHEET', { align: 'center' });
     doc.moveDown(0.5);
     doc.rect(200, doc.y, 195, 2).fill('#3b82f6');
-    doc.moveDown(2);
+    doc.moveDown(1.5);
     
-    // Info Box (Left and Right columns)
+    // Info Box
     const boxY = doc.y;
     doc.roundedRect(50, boxY, 495, 120, 8).lineWidth(1).stroke('#e2e8f0');
     
@@ -212,6 +232,15 @@ const exportPdf = async (req, res, next) => {
     doc.fillColor('#0f172a').fontSize(12).font('Helvetica').text(exam.title, 70, boxY + 30);
     doc.fontSize(10).text(`Code: ${exam.examCode}`, 70, boxY + 45);
     doc.text(`Date: ${new Date(session?.submissionTime || Date.now()).toLocaleDateString()}`, 70, boxY + 60);
+    
+    let timeTakenStr = 'N/A';
+    if (session && session.startTime && session.submissionTime) {
+      const diffMs = new Date(session.submissionTime) - new Date(session.startTime);
+      const diffMins = Math.floor(diffMs / 60000);
+      const diffSecs = Math.floor((diffMs % 60000) / 1000);
+      timeTakenStr = `${diffMins}m ${diffSecs}s`;
+    }
+    doc.text(`Time Taken: ${timeTakenStr}`, 70, boxY + 75);
     
     doc.moveTo(297, boxY + 15).lineTo(297, boxY + 105).lineWidth(1).stroke('#e2e8f0');
 
@@ -221,60 +250,97 @@ const exportPdf = async (req, res, next) => {
     doc.text(`Violations: ${session?.violationCount || 0}`, 315, boxY + 60);
     doc.text(`Status: ${submission.status}`, 315, boxY + 75);
 
-    doc.y = boxY + 140;
+    doc.y = boxY + 135;
 
     // Score Summary
     const percentage = submission.totalMarks > 0 ? ((submission.marksObtained / submission.totalMarks) * 100).toFixed(2) : 0;
-    const isPass = percentage >= 40;
+    const isPass = percentage >= (settings.defaultPassPercentage || 40);
 
-    doc.roundedRect(50, doc.y, 495, 80, 8).fill('#f8fafc').stroke('#e2e8f0');
-    doc.fillColor('#0f172a').fontSize(14).font('Helvetica-Bold').text('FINAL SCORE', 50, doc.y + 20, { align: 'center' });
-    doc.fontSize(24).fillColor('#3b82f6').text(`${submission.marksObtained} / ${submission.totalMarks}`, { align: 'center' });
-    doc.fontSize(14).fillColor(isPass ? '#10b981' : '#ef4444').text(`${percentage}% - ${isPass ? 'PASS' : 'FAIL'}`, { align: 'center' });
+    doc.roundedRect(50, doc.y, 495, 75, 8).fill('#f8fafc').stroke('#e2e8f0');
+    doc.fillColor('#0f172a').fontSize(12).font('Helvetica-Bold').text('FINAL SCORE', 50, doc.y + 15, { align: 'center' });
+    doc.fontSize(22).fillColor('#3b82f6').text(`${submission.marksObtained} / ${submission.totalMarks}`, { align: 'center' });
+    doc.fontSize(12).fillColor(isPass ? '#10b981' : '#ef4444').text(`${percentage}% - ${isPass ? 'PASS' : 'FAIL'}`, { align: 'center' });
     
-    doc.moveDown(3);
+    doc.moveDown(2);
 
     // Detailed Report
     doc.fillColor('#0f172a').fontSize(14).font('Helvetica-Bold').text('Detailed Question Analysis');
-    doc.moveDown(1);
+    doc.moveDown(0.5);
     doc.moveTo(50, doc.y).lineTo(545, doc.y).lineWidth(1).stroke('#cbd5e1');
     doc.moveDown(1);
 
-    questions.forEach((q, index) => {
-      if (doc.y > 700) {
+    const checkPageBreak = (neededHeight) => {
+      if (doc.y + neededHeight > 750) {
         doc.addPage();
         doc.moveTo(50, 50).lineTo(545, 50).lineWidth(1).stroke('#cbd5e1');
         doc.moveDown(1);
       }
+    };
+
+    questions.forEach((q, index) => {
+      // Estimate height: Question text (2 lines approx) + options (4 lines) + result (1-2 lines) + spacing
+      checkPageBreak(120);
       
       const stdAns = submission.answers.get(q._id.toString());
       const isCorrect = stdAns === q.correctAnswer;
+      const isUnanswered = !stdAns;
       
-      doc.fillColor('#1e293b').fontSize(11).font('Helvetica-Bold').text(`Q${index + 1}. ${q.text}`);
+      doc.fillColor('#1e293b').fontSize(11).font('Helvetica-Bold').text(`Q${index + 1}. ${q.text}`, { width: 495 });
+      doc.moveDown(0.5);
+      
+      const optionLabels = ['A', 'B', 'C', 'D'];
       doc.font('Helvetica').fontSize(10);
       
+      q.options.forEach((opt, idx) => {
+        const label = optionLabels[idx] || (idx + 1).toString();
+        let color = '#475569';
+        let prefix = `  ${label}) `;
+        
+        if (opt === stdAns) {
+          if (isCorrect) {
+            color = '#15803d'; // Green for correct selected
+            prefix = `✔ ${label}) `;
+          } else {
+            color = '#b91c1c'; // Red for wrong selected
+            prefix = `❌ ${label}) `;
+          }
+        } else if (!isCorrect && opt === q.correctAnswer) {
+           color = '#15803d'; // Green for correct answer if they got it wrong or unanswered
+           prefix = `✔ ${label}) `;
+        }
+
+        doc.fillColor(color).text(`${prefix}${opt}`, { indent: 15 });
+      });
+      
       doc.moveDown(0.5);
-      doc.fillColor(isCorrect ? '#15803d' : '#b91c1c').text(`Your Answer: ${stdAns || 'Not Answered'}`);
-      if (!isCorrect) {
-        doc.fillColor('#15803d').text(`Correct Answer: ${q.correctAnswer}`);
+      
+      doc.font('Helvetica-Bold').fontSize(10);
+      if (isUnanswered) {
+        doc.fillColor('#64748b').text('Not Answered', { indent: 15 });
+      } else if (isCorrect) {
+        doc.fillColor('#15803d').text('✔ Selected (Correct)', { indent: 15 });
+      } else {
+        doc.fillColor('#b91c1c').text('❌ Selected', { indent: 15 });
       }
       
-      doc.fillColor('#64748b').text(`Marks Awarded: ${isCorrect ? q.marks : 0} / ${q.marks}`);
+      doc.font('Helvetica').fontSize(9).fillColor('#94a3b8').text(`Marks: ${isCorrect ? q.marks : 0} / ${q.marks}`, { align: 'right' });
       
-      doc.moveDown(1);
+      doc.moveDown(0.5);
       doc.moveTo(50, doc.y).lineTo(545, doc.y).lineWidth(0.5).stroke('#e2e8f0');
-      doc.moveDown(1);
+      doc.moveDown(0.5);
     });
 
-    // Footer
-    const pages = doc.bufferedPageRange ? doc.bufferedPageRange().count : 1;
-    // PDF Footer
-    doc.fontSize(10).fillColor('#64748b').text(
-      settings.pdfFooter || 'Generated by BIITM Quiz Master Admin Portal', 
-      0, 
-      doc.page.height - 50, 
-      { align: 'center' }
-    );
+    // Add footer to all pages
+    const pages = doc.bufferedPageRange();
+    for (let i = 0; i < pages.count; i++) {
+      doc.switchToPage(i);
+      doc.fontSize(9).fillColor('#94a3b8').text(
+        settings.pdfFooter || 'Generated by BIITM Quiz Master',
+        50,
+        800,
+        { align: 'center', width: 495 }
+      );
+    }
 
     doc.end();
 

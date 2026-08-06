@@ -56,11 +56,8 @@ const verifyStudent = async (req, res, next) => {
     if (exam.status === 'Scheduled' || exam.status === 'OpenRegistration') {
       session.status = 'Waiting';
       await session.save();
-    } else if (exam.status === 'Active' && session.status === 'Waiting') {
-      session.status = 'Active';
-      session.startTime = new Date();
-      await session.save();
     }
+    // Note: If exam is 'Active' and session is 'Waiting', it remains 'Waiting' until admin approves.
 
     res.json({ status: session.status, examId: exam._id, studentId: student._id });
   } catch (error) {
@@ -103,9 +100,9 @@ const registerStudent = async (req, res, next) => {
       session = await Session.create({
         studentId: student._id,
         examId: exam._id,
-        status: exam.status === 'Active' ? 'Active' : 'Waiting',
+        status: 'Waiting', // Even if Active, they must be approved
         joinTime: new Date(),
-        startTime: exam.status === 'Active' ? new Date() : null,
+        startTime: null,
         activityTimeline: [{ event: 'Joined Exam' }]
       });
       

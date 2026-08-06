@@ -21,6 +21,12 @@ const WaitingRoom = () => {
     if (socket) {
       socket.emit('student_join', { examId: sessionData.examId, studentId: sessionData.studentId });
 
+      socket.on('student_status_update', (data) => {
+        if (data.status === 'Active' && data.studentId === sessionData.studentId) {
+          navigate(`/exam/${sessionData.examId}`);
+        }
+      });
+
       const interval = setInterval(async () => {
         try {
           const { data } = await api.post('/student/verify', { 
@@ -33,9 +39,12 @@ const WaitingRoom = () => {
         } catch(e) {
           // Silent ignore for polling errors
         }
-      }, 3000); // Poll more frequently for active start
+      }, 5000); // Polling as backup
 
-      return () => clearInterval(interval);
+      return () => {
+        clearInterval(interval);
+        socket.off('student_status_update');
+      };
     }
   }, [socket, navigate, sessionData]);
 

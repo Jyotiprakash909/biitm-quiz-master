@@ -8,7 +8,7 @@ export const SocketProvider = ({ children }) => {
 
   useEffect(() => {
     // Connect directly to the backend to avoid Vite proxy ECONNREFUSED spam in the terminal
-    const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+    const backendUrl = import.meta.env.VITE_API_URL || 'https://biitm-quiz-master.onrender.com';
     const newSocket = io(backendUrl);
     setSocket(newSocket);
 

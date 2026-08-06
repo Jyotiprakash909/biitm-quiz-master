@@ -268,9 +268,8 @@ const ActiveExam = () => {
         </Box>
       </Box>
 
-      <Box sx={{ maxWidth: 1200, margin: '0 auto', p: { xs: 2, md: 3 }, mt: 2 }}>
-        <Grid container spacing={4} flexDirection={{ xs: 'column-reverse', md: 'row' }}>
-          
+      <Box sx={{ width: '100%', maxWidth: 1200, margin: '0 auto', p: { xs: 2, md: 3 }, mt: 2 }}>
+        <Grid container spacing={{ xs: 2, md: 4 }}>
           {/* Question Area */}
           <Grid item xs={12} md={8}
             sx={{
@@ -320,21 +319,22 @@ const ActiveExam = () => {
                               }}
                               onClick={() => handleOptionSelect(q._id, opt)}
                             >
-                              <FormControlLabel 
-                                value={opt} 
-                                control={<Radio color="primary" sx={{ display: 'none' }} />} 
-                                label={
-                                  <Box display="flex" alignItems="center" width="100%" p={1.5}>
-                                    <Box sx={{ width: 24, height: 24, borderRadius: '50%', border: `2px solid ${isSelected ? theme.palette.primary.main : '#94a3b8'}`, mr: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                      {isSelected && <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: 'primary.main' }} />}
+                                <FormControlLabel 
+                                  value={opt} 
+                                  disableTypography
+                                  control={<Radio color="primary" sx={{ display: 'none' }} />} 
+                                  label={
+                                    <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', width: '100%', p: 1.5, textAlign: 'left' }}>
+                                      <Box sx={{ width: 24, height: 24, borderRadius: '50%', border: `2px solid ${isSelected ? theme.palette.primary.main : '#94a3b8'}`, mr: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                        {isSelected && <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: 'primary.main' }} />}
+                                      </Box>
+                                      <Typography sx={{ fontWeight: isSelected ? 600 : 400, color: isSelected ? 'primary.dark' : '#334155', wordBreak: 'break-word', flexGrow: 1 }}>
+                                        {opt}
+                                      </Typography>
                                     </Box>
-                                    <Typography sx={{ fontWeight: isSelected ? 600 : 400, color: isSelected ? 'primary.dark' : '#334155' }}>
-                                      {opt}
-                                    </Typography>
-                                  </Box>
-                                } 
-                                sx={{ width: '100%', m: 0 }}
-                              />
+                                  } 
+                                  sx={{ width: '100%', m: 0 }}
+                                />
                             </Paper>
                           )
                         })}
@@ -388,9 +388,10 @@ const ActiveExam = () => {
                         >
                           <FormControlLabel 
                             value={opt} 
+                            disableTypography
                             control={<Radio color="primary" sx={{ display: 'none' }} />} 
                             label={
-                              <Box display="flex" alignItems="center" width="100%" p={1.5}>
+                              <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', width: '100%', p: 1.5, textAlign: 'left' }}>
                                 <Box 
                                   sx={{ 
                                     width: 24, height: 24, borderRadius: '50%', border: `2px solid ${isSelected ? theme.palette.primary.main : '#94a3b8'}`,
@@ -399,7 +400,7 @@ const ActiveExam = () => {
                                 >
                                   {isSelected && <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: 'primary.main' }} />}
                                 </Box>
-                                <Typography sx={{ fontWeight: isSelected ? 600 : 400, color: isSelected ? 'primary.dark' : '#334155' }}>
+                                <Typography sx={{ fontWeight: isSelected ? 600 : 400, color: isSelected ? 'primary.dark' : '#334155', wordBreak: 'break-word', flexGrow: 1 }}>
                                   {opt}
                                 </Typography>
                               </Box>

@@ -50,8 +50,21 @@ const ResultStatus = () => {
     fetchResult();
   }, [examId, navigate]); 
 
-  const handleDownload = () => {
-    window.open(`/api/results/exam/${examId}/student/${sessionData.studentId}/pdf`, '_blank');
+  const handleDownload = async () => {
+    try {
+      const response = await api.get(`/results/exam/${examId}/student/${sessionData.studentId}/pdf`, {
+        responseType: 'blob'
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `Marksheet_${sessionData.rollNumber}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error('Failed to download PDF', err);
+    }
   };
 
   const handleExit = () => {

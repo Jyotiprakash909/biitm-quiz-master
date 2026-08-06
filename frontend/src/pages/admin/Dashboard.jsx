@@ -110,9 +110,9 @@ const Dashboard = () => {
         
         {/* Pass vs Fail Ratio */}
         <Grid item xs={12} md={4}>
-          <Paper elevation={0} sx={{ p: 3, borderRadius: 4, border: '1px solid #e2e8f0', height: 400, display: 'flex', flexDirection: 'column' }}>
+          <Paper elevation={0} sx={{ p: 3, borderRadius: 4, border: '1px solid #e2e8f0', height: '100%', minHeight: 400, display: 'flex', flexDirection: 'column' }}>
             <Typography variant="h6" fontWeight="800" color="#1e293b" mb={2}>Pass vs Fail Overall</Typography>
-            <Box sx={{ flexGrow: 1 }}>
+            <Box sx={{ flexGrow: 1, minHeight: 300 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -138,9 +138,9 @@ const Dashboard = () => {
 
         {/* Live Session Status */}
         <Grid item xs={12} md={8}>
-          <Paper elevation={0} sx={{ p: 3, borderRadius: 4, border: '1px solid #e2e8f0', height: 400, display: 'flex', flexDirection: 'column' }}>
+          <Paper elevation={0} sx={{ p: 3, borderRadius: 4, border: '1px solid #e2e8f0', height: '100%', minHeight: 400, display: 'flex', flexDirection: 'column' }}>
             <Typography variant="h6" fontWeight="800" color="#1e293b" mb={2}>Live Session Status</Typography>
-            <Box sx={{ flexGrow: 1 }}>
+            <Box sx={{ flexGrow: 1, minHeight: 300 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={stats.chartData?.liveStatus || []} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
@@ -164,9 +164,9 @@ const Dashboard = () => {
 
         {/* Violation Analytics */}
         <Grid item xs={12}>
-          <Paper elevation={0} sx={{ p: 3, borderRadius: 4, border: '1px solid #e2e8f0', height: 400, display: 'flex', flexDirection: 'column' }}>
+          <Paper elevation={0} sx={{ p: 3, borderRadius: 4, border: '1px solid #e2e8f0', height: '100%', minHeight: 400, display: 'flex', flexDirection: 'column' }}>
             <Typography variant="h6" fontWeight="800" color="#1e293b" mb={2}>Violation Analytics by Exam</Typography>
-            <Box sx={{ flexGrow: 1 }}>
+            <Box sx={{ flexGrow: 1, minHeight: 300 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={stats.chartData?.violationTrend || []} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                   <defs>

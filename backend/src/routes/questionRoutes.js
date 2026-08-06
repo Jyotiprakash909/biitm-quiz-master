@@ -7,7 +7,8 @@ const {
   deleteQuestion,
   bulkAddQuestions,
   bulkDeleteQuestions,
-  reorderQuestions
+  reorderQuestions,
+  downloadTemplate
 } = require('../controllers/questionController');
 const { protectAdmin } = require('../middleware/authMiddleware');
 const multer = require('multer');
@@ -34,6 +35,7 @@ router.route('/')
   .post(protectAdmin, addQuestion)
   .get(protectAdmin, getQuestions);
 
+router.get('/template', protectAdmin, downloadTemplate);
 router.post('/bulk', protectAdmin, upload.single('file'), bulkAddQuestions);
 router.post('/bulk-delete', protectAdmin, bulkDeleteQuestions);
 router.put('/reorder', protectAdmin, reorderQuestions);

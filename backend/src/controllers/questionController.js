@@ -2,6 +2,7 @@ const Question = require('../models/Question');
 const Exam = require('../models/Exam');
 const { parseQuestionsExcel } = require('../services/excelService');
 const fs = require('fs');
+const xlsx = require('xlsx');
 
 // @desc    Add a manual question
 // @route   POST /api/exams/:examId/questions
@@ -106,7 +107,7 @@ const deleteQuestion = async (req, res, next) => {
   }
 };
 
-// @desc    Bulk add questions (Excel upload placeholder)
+// @desc    Bulk add questions (Excel upload)
 // @route   POST /api/exams/:examId/questions/bulk
 // @access  Private (Admin)
 const bulkAddQuestions = async (req, res, next) => {
@@ -132,7 +133,8 @@ const bulkAddQuestions = async (req, res, next) => {
     } catch (err) {
       fs.unlinkSync(req.file.path);
       res.status(400);
-      throw new Error(`Error parsing Excel: ${err.message}`);
+      // Ensure the error message string from the parser is forwarded exactly
+      throw new Error(err.message);
     }
 
     const maxQuestion = await Question.findOne({ examId }).sort('-questionNumber');
@@ -157,6 +159,46 @@ const bulkAddQuestions = async (req, res, next) => {
     if (req.file && fs.existsSync(req.file.path)) {
       fs.unlinkSync(req.file.path);
     }
+    next(error);
+  }
+};
+
+// @desc    Download Excel Template
+// @route   GET /api/exams/:examId/questions/template
+// @access  Private (Admin)
+const downloadTemplate = (req, res, next) => {
+  try {
+    const data = [
+      {
+        'Question': 'What is the capital of France?',
+        'Option A': 'Berlin',
+        'Option B': 'Paris',
+        'Option C': 'Madrid',
+        'Option D': 'Rome',
+        'Correct Answer': 'Paris',
+        'Marks': 1
+      },
+      {
+        'Question': 'What is 2 + 2?',
+        'Option A': '3',
+        'Option B': '4',
+        'Option C': '5',
+        'Option D': '6',
+        'Correct Answer': '4',
+        'Marks': 2
+      }
+    ];
+
+    const worksheet = xlsx.utils.json_to_sheet(data);
+    const workbook = xlsx.utils.book_new();
+    xlsx.utils.book_append_sheet(workbook, worksheet, 'Questions');
+
+    const buffer = xlsx.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', 'attachment; filename=QuestionTemplate.xlsx');
+    res.send(buffer);
+  } catch (error) {
     next(error);
   }
 };
@@ -202,5 +244,6 @@ module.exports = {
   bulkAddQuestions,
   bulkDeleteQuestions,
   reorderQuestions,
-  getGlobalQuestions
+  getGlobalQuestions,
+  downloadTemplate
 };

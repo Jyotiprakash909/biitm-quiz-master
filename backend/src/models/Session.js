@@ -40,6 +40,9 @@ const sessionSchema = new mongoose.Schema({
   submissionTime: {
     type: Date,
   },
+  approvedAt: {
+    type: Date,
+  },
   violationCount: {
     type: Number,
     default: 0,

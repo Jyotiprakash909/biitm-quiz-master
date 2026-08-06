@@ -42,7 +42,7 @@ function App() {
         <Route path="/" element={<StudentLayout><Entry /></StudentLayout>} />
         <Route path="/register" element={<StudentLayout><Registration /></StudentLayout>} />
         <Route path="/waiting" element={<StudentLayout><WaitingRoom /></StudentLayout>} />
-        <Route path="/exam/:examId" element={<StudentLayout disablePadding><ActiveExam /></StudentLayout>} />
+        <Route path="/exam/:examId" element={<StudentLayout disablePadding maxWidth={false}><ActiveExam /></StudentLayout>} />
         <Route path="/result/:examId" element={<StudentLayout><ResultStatus /></StudentLayout>} />
 
         {/* Admin Routes */}

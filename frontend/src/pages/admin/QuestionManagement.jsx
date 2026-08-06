@@ -20,6 +20,7 @@ const QuestionManagement = () => {
   const [openManual, setOpenManual] = useState(false);
   const [openBulk, setOpenBulk] = useState(false);
   const [file, setFile] = useState(null);
+  const [bulkErrors, setBulkErrors] = useState([]);
   
   const [selectedIds, setSelectedIds] = useState([]);
   const [editingId, setEditingId] = useState(null);
@@ -98,6 +99,7 @@ const QuestionManagement = () => {
 
   const handleBulkUpload = async () => {
     if (!file) return;
+    setBulkErrors([]);
     const formData = new FormData();
     formData.append('file', file);
 
@@ -110,7 +112,30 @@ const QuestionManagement = () => {
       fetchQuestions();
     } catch (err) {
       console.error(err);
-      alert('Failed to upload Excel');
+      if (err.response && err.response.data && err.response.data.message) {
+        // Split errors by newline if it's our formatted error string
+        const errorMsg = err.response.data.message;
+        setBulkErrors(errorMsg.split('\n'));
+      } else {
+        setBulkErrors(['Failed to upload Excel']);
+      }
+    }
+  };
+
+  const handleDownloadTemplate = async () => {
+    try {
+      const response = await api.get(`/exams/${examId}/questions/template`, {
+        responseType: 'blob'
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'QuestionTemplate.xlsx');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error('Failed to download template', err);
     }
   };
 
@@ -281,19 +306,33 @@ const QuestionManagement = () => {
       </Dialog>
 
       {/* Bulk Upload Dialog */}
-      <Dialog open={openBulk} onClose={() => setOpenBulk(false)} maxWidth="sm" fullWidth>
+      <Dialog open={openBulk} onClose={() => { setOpenBulk(false); setBulkErrors([]); }} maxWidth="sm" fullWidth>
         <DialogTitle sx={{ fontWeight: 'bold' }}>Upload Questions via Excel</DialogTitle>
         <DialogContent>
-          <Typography variant="body2" mb={2} color="textSecondary">
-            Please ensure your Excel file has the following columns on the first row: <br/>
-            <strong>Question | Option A | Option B | Option C | Option D | Correct Answer | Marks</strong>
-          </Typography>
-          <Box border="1px dashed #ccc" p={3} textAlign="center" borderRadius={1}>
-            <input type="file" accept=".xlsx" onChange={(e) => setFile(e.target.files[0])} />
+          <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+            <Typography variant="body2" color="textSecondary">
+              Please ensure your Excel file has the exact following columns: <br/>
+              <strong>Question | Option A | Option B | Option C | Option D | Correct Answer | Marks</strong>
+            </Typography>
+            <Button variant="outlined" size="small" onClick={handleDownloadTemplate}>Download Template</Button>
           </Box>
+          <Box border="1px dashed #ccc" p={3} textAlign="center" borderRadius={1} mb={2}>
+            <input type="file" accept=".xlsx" onChange={(e) => { setFile(e.target.files[0]); setBulkErrors([]); }} />
+          </Box>
+          
+          {bulkErrors.length > 0 && (
+            <Box bgcolor="error.light" p={2} borderRadius={1} maxHeight="150px" overflow="auto">
+              <Typography variant="subtitle2" color="error.contrastText" fontWeight="bold">Validation Errors:</Typography>
+              <ul style={{ margin: 0, paddingLeft: 20, color: '#fff', fontSize: '0.85rem' }}>
+                {bulkErrors.map((err, i) => (
+                  <li key={i}>{err}</li>
+                ))}
+              </ul>
+            </Box>
+          )}
         </DialogContent>
         <DialogActions sx={{ p: 2 }}>
-          <Button onClick={() => setOpenBulk(false)}>Cancel</Button>
+          <Button onClick={() => { setOpenBulk(false); setBulkErrors([]); }}>Cancel</Button>
           <Button onClick={handleBulkUpload} variant="contained" disabled={!file}>Upload Excel</Button>
         </DialogActions>
       </Dialog>

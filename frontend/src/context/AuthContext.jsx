@@ -5,8 +5,14 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [admin, setAdmin] = useState(() => {
-    const storedAdmin = localStorage.getItem('adminInfo');
-    return storedAdmin ? JSON.parse(storedAdmin) : null;
+    try {
+      const storedAdmin = localStorage.getItem('adminInfo');
+      return storedAdmin ? JSON.parse(storedAdmin) : null;
+    } catch (e) {
+      console.error('Error parsing adminInfo from localStorage', e);
+      localStorage.removeItem('adminInfo');
+      return null;
+    }
   });
 
   const login = async (username, password) => {
