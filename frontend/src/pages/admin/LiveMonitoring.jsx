@@ -208,7 +208,7 @@ const LiveMonitoring = () => {
 
       {/* Stats Summary */}
       <Grid container spacing={3} mb={4}>
-        <Grid item xs={12} lg={9}>
+        <Grid item xs={12}>
           <Grid container spacing={3}>
             <Grid item xs={6} sm={4} md={2.4}>
               <Paper elevation={0} sx={{ p: 2.5, borderRadius: 3, border: '1px solid #e2e8f0', bgcolor: '#fff', borderTop: '4px solid #3b82f6' }}>
@@ -241,26 +241,6 @@ const LiveMonitoring = () => {
               </Paper>
             </Grid>
           </Grid>
-        </Grid>
-        <Grid item xs={12} lg={3}>
-          <Paper elevation={0} sx={{ p: 2.5, borderRadius: 3, border: '1px solid #e2e8f0', bgcolor: '#fff', height: '100%', display: 'flex', flexDirection: 'column' }}>
-            <Typography variant="subtitle2" fontWeight="800" color="#0f172a" mb={2}>Recent Violations (Live)</Typography>
-            <Box flex={1} overflow="auto" maxHeight={150}>
-              {recentViolations.length === 0 ? (
-                <Typography variant="body2" color="#64748b" fontStyle="italic">No recent violations.</Typography>
-              ) : (
-                recentViolations.map((v, i) => (
-                  <Box key={i} mb={1} pb={1} borderBottom="1px solid #f1f5f9" onClick={() => navigate(`/admin/sessions?examId=${examId}&search=${v.rollNumber}`)} sx={{ cursor: 'pointer', '&:hover': { bgcolor: '#f8fafc' } }}>
-                    <Typography variant="caption" fontWeight="bold" color="#ef4444">{v.type}</Typography>
-                    <Box display="flex" justifyContent="space-between">
-                      <Typography variant="caption" color="#0f172a">{v.studentName} ({v.rollNumber})</Typography>
-                      <Typography variant="caption" color="#64748b">{v.time.toLocaleTimeString()}</Typography>
-                    </Box>
-                  </Box>
-                ))
-              )}
-            </Box>
-          </Paper>
         </Grid>
       </Grid>
 
