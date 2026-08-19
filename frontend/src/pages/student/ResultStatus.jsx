@@ -159,8 +159,8 @@ const ResultStatus = () => {
                   </Button>
                 </Box>
                 
-                <Paper elevation={0} sx={{ overflow: 'hidden', border: '1px solid #e2e8f0', borderRadius: 3 }}>
-                  <Table size="medium">
+                <Paper elevation={0} sx={{ overflowX: 'auto', border: '1px solid #e2e8f0', borderRadius: 3 }}>
+                  <Table size="medium" sx={{ minWidth: 600 }}>
                     <TableHead>
                       <TableRow sx={{ bgcolor: '#f8fafc' }}>
                         <TableCell sx={{ fontWeight: 700, color: '#475569' }} width="40%">Question</TableCell>
