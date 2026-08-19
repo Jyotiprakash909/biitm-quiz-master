@@ -7,7 +7,12 @@ const Student = require('../models/Student');
 const Notification = require('../models/Notification');
 const examEvents = require('../utils/examEvents');
 
-module.exports = (io) => {
+let ioInstance;
+
+module.exports = {
+  getIo: () => ioInstance,
+  init: (io) => {
+    ioInstance = io;
   // Helper: Force submit
   async function forceSubmit(examId, studentId) {
     try {
@@ -197,8 +202,10 @@ module.exports = (io) => {
           );
 
           io.to(`admin_${examId}`).emit('student_status_update', { studentId, status: updatedSession.status, violationCount: updatedSession.violationCount });
-
+          
           const student = await Student.findById(studentId);
+          io.to(`admin_${examId}`).emit('student_violation', { studentId, studentName: student.name, rollNumber: student.rollNumber, type: violationType });
+          
           await Notification.create({
             title: 'Student Violation Detected',
             description: `${student.name} committed a ${violationType} violation. Total: ${updatedSession.violationCount}`,
@@ -249,4 +256,5 @@ module.exports = (io) => {
 
     // Helper removed from here, moved to outer scope
   });
+  }
 };

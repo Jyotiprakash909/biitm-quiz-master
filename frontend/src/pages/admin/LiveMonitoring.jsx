@@ -51,14 +51,27 @@ const LiveMonitoring = () => {
     if (socket) {
       socket.emit('admin_join', { examId });
       socket.on('student_status_update', (data) => {
-        fetchLiveStats(); // Re-fetch entire list on update to ensure sync
+        setStudents(prev => {
+          const exists = prev.some(s => s.studentId === data.studentId);
+          if (!exists) {
+            // New student joined, fetch list
+            fetchLiveStats();
+            return prev;
+          }
+          return prev.map(s => 
+            s.studentId === data.studentId 
+              ? { ...s, status: data.status, violationCount: data.violationCount !== undefined ? data.violationCount : s.violationCount }
+              : s
+          );
+        });
       });
       socket.on('student_violation', (data) => {
         setRecentViolations(prev => {
           const updated = [{ ...data, time: new Date() }, ...prev];
           return updated.slice(0, 10);
         });
-        fetchLiveStats();
+        // We don't need to fetchLiveStats here because 'student_status_update' will ALSO be emitted
+        // by the backend containing the latest violationCount for this student.
       });
     }
 
@@ -141,6 +154,33 @@ const LiveMonitoring = () => {
       default: return 'default';
     }
   };
+
+  const sortedStudents = React.useMemo(() => {
+    return [...filteredStudents].sort((a, b) => {
+      const aWaiting = a.status === 'Waiting';
+      const bWaiting = b.status === 'Waiting';
+      
+      // Waiting students always come first
+      if (aWaiting && !bWaiting) return -1;
+      if (!aWaiting && bWaiting) return 1;
+      
+      // Both waiting, sort by join time
+      if (aWaiting && bWaiting) {
+        return new Date(a.joinTime) - new Date(b.joinTime);
+      }
+      
+      // Active students - sort by violations descending
+      const aViolations = Number(a.violationCount || 0);
+      const bViolations = Number(b.violationCount || 0);
+      
+      if (aViolations !== bViolations) {
+        return bViolations - aViolations;
+      }
+      
+      // Stable fallback
+      return new Date(a.joinTime) - new Date(b.joinTime);
+    });
+  }, [filteredStudents]);
 
   return (
     <Box>
@@ -254,8 +294,8 @@ const LiveMonitoring = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {filteredStudents.length === 0 && <TableRow><TableCell colSpan={5} align="center" sx={{ py: 4, color: '#64748b' }}>No students found.</TableCell></TableRow>}
-              {filteredStudents.map((student, idx) => (
+              {sortedStudents.length === 0 && <TableRow><TableCell colSpan={5} align="center" sx={{ py: 4, color: '#64748b' }}>No students found.</TableCell></TableRow>}
+              {sortedStudents.map((student, idx) => (
                 <TableRow key={idx} hover>
                   <TableCell>
                     <Typography fontWeight="700" color="#0f172a">{student.name}</Typography>

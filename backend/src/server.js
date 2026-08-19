@@ -26,7 +26,7 @@ const io = new Server(server, {
 });
 
 // Pass io to routes/controllers if needed or handle in a separate module
-require('./sockets/socketManager')(io);
+require('./sockets/socketManager').init(io);
 
 // Middleware
 app.use(helmet({ crossOriginResourcePolicy: false }));
