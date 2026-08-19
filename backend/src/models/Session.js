@@ -28,7 +28,7 @@ const sessionSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['Waiting', 'Active', 'Disconnected', 'Submitted', 'AutoSubmitted'],
+    enum: ['Waiting', 'Active', 'Disconnected', 'Submitted', 'AutoSubmitted', 'Declined'],
     default: 'Waiting',
   },
   joinTime: {

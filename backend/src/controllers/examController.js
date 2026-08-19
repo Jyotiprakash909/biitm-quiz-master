@@ -223,6 +223,27 @@ const updateExamStatus = async (req, res, next) => {
         const durationMs = exam.durationMinutes * 60 * 1000;
         exam.endTime = new Date(exam.startTime.getTime() + durationMs);
         
+        // Find all currently waiting sessions (pre-registered) and start them automatically
+        const Session = require('../models/Session');
+        const waitingSessions = await Session.find({ examId: exam._id, status: 'Waiting' });
+        
+        if (waitingSessions.length > 0) {
+          const sessionIds = waitingSessions.map(s => s._id);
+          await Session.updateMany(
+            { _id: { $in: sessionIds } },
+            { $set: { status: 'Active', startTime: exam.startTime } }
+          );
+
+          // Emit socket event to each student so they transition automatically
+          const { getIo } = require('../sockets/socketManager');
+          const io = getIo();
+          if (io) {
+            waitingSessions.forEach(s => {
+              io.to(exam._id.toString()).emit('student_status_update', { studentId: s.studentId, status: 'Active' });
+            });
+          }
+        }
+
         // Start server timer
         setTimeout(async () => {
           const checkExam = await Exam.findById(exam._id);
@@ -311,6 +332,35 @@ const approveSession = async (req, res, next) => {
   }
 };
 
+// @desc    Decline late student session
+// @route   PUT /api/exams/:examId/sessions/:sessionId/decline
+// @access  Private (Admin)
+const declineSession = async (req, res, next) => {
+  try {
+    const Session = require('../models/Session');
+    const session = await Session.findOne({ _id: req.params.sessionId, examId: req.params.examId });
+    if (!session) {
+      res.status(404);
+      throw new Error('Session not found');
+    }
+
+    session.status = 'Declined';
+    session.activityTimeline.push({ event: 'Admin Declined Late Entry' });
+    await session.save();
+
+    // Fire socket event so client can show rejection message
+    const { getIo } = require('../sockets/socketManager');
+    const io = getIo();
+    if (io) {
+      io.to(session.examId.toString()).emit('student_status_update', { studentId: session.studentId, status: 'Declined' });
+    }
+
+    res.json(session);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   createExam,
   getExams,
@@ -321,5 +371,6 @@ module.exports = {
   duplicateExam,
   updateExamStatus,
   getLiveStats,
-  approveSession
+  approveSession,
+  declineSession
 };

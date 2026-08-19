@@ -10,7 +10,8 @@ const {
   duplicateExam,
   updateExamStatus,
   getLiveStats,
-  approveSession
+  approveSession,
+  declineSession
 } = require('../controllers/examController');
 const { protectAdmin } = require('../middleware/authMiddleware');
 
@@ -32,5 +33,6 @@ router.post('/:id/duplicate', protectAdmin, duplicateExam);
 router.put('/:id/status', protectAdmin, updateExamStatus);
 router.get('/:id/live-stats', protectAdmin, getLiveStats);
 router.put('/:examId/sessions/:sessionId/approve', protectAdmin, approveSession);
+router.put('/:examId/sessions/:sessionId/decline', protectAdmin, declineSession);
 
 module.exports = router;

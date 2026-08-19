@@ -63,9 +63,19 @@ module.exports = (io) => {
   // Listen to backend timer events to auto-submit all active students
   examEvents.on('end_exam', async (examId) => {
     try {
+      const exam = await Exam.findById(examId);
+      if (!exam) return;
+      const durationMs = exam.durationMinutes * 60 * 1000;
+      const now = new Date().getTime();
+
       const activeSessions = await Session.find({ examId, status: 'Active' });
       for (const session of activeSessions) {
-        await forceSubmit(examId, session.studentId);
+        if (!session.startTime) continue;
+        const sessionEnd = new Date(session.startTime).getTime() + durationMs;
+        // Only force submit if their personal timer has essentially run out (with a 5-second leeway)
+        if (now >= sessionEnd - 5000) { 
+          await forceSubmit(examId, session.studentId);
+        }
       }
       io.to(examId).emit('exam_ended');
     } catch (err) {

@@ -90,6 +90,16 @@ const LiveMonitoring = () => {
     }
   };
 
+  const handleDecline = async (sessionId) => {
+    try {
+      await api.put(`/exams/${examId}/sessions/${sessionId}/decline`);
+      fetchLiveStats();
+    } catch (err) {
+      console.error(err);
+      alert('Failed to decline student');
+    }
+  };
+
   const handlePublishResults = async () => {
     try {
       await api.post(`/results/exam/${examId}/publish`, { isPublished: true });
@@ -268,7 +278,10 @@ const LiveMonitoring = () => {
                   </TableCell>
                   <TableCell>
                     {student.status === 'Waiting' && exam?.status === 'Active' && (
-                      <Button size="small" variant="contained" color="success" onClick={() => handleApprove(student.sessionId)}>Allow Entry</Button>
+                      <Box display="flex" gap={1}>
+                        <Button size="small" variant="contained" color="success" onClick={() => handleApprove(student.sessionId)}>Allow</Button>
+                        <Button size="small" variant="contained" color="error" onClick={() => handleDecline(student.sessionId)}>Decline</Button>
+                      </Box>
                     )}
                   </TableCell>
                 </TableRow>

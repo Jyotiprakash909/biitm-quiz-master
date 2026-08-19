@@ -78,7 +78,7 @@ const registerStudent = async (req, res, next) => {
       throw new Error('Invalid Exam Code');
     }
 
-    if (exam.status !== 'OpenRegistration') {
+    if (exam.status !== 'OpenRegistration' && exam.status !== 'Active') {
       res.status(403);
       throw new Error('Registration is currently closed by the instructor.');
     }

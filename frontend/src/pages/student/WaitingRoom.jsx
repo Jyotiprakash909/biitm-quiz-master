@@ -22,8 +22,14 @@ const WaitingRoom = () => {
       socket.emit('student_join', { examId: sessionData.examId, studentId: sessionData.studentId });
 
       socket.on('student_status_update', (data) => {
-        if (data.status === 'Active' && data.studentId === sessionData.studentId) {
-          navigate(`/exam/${sessionData.examId}`);
+        if (data.studentId === sessionData.studentId) {
+          if (data.status === 'Active') {
+            navigate(`/exam/${sessionData.examId}`);
+          } else if (data.status === 'Declined') {
+            alert('Your entry request was declined by the administrator.');
+            localStorage.removeItem('studentSession');
+            navigate('/');
+          }
         }
       });
 
@@ -35,6 +41,10 @@ const WaitingRoom = () => {
           });
           if (data.status === 'Active') {
             navigate(`/exam/${data.examId}`);
+          } else if (data.status === 'Declined') {
+            alert('Your entry request was declined by the administrator.');
+            localStorage.removeItem('studentSession');
+            navigate('/');
           }
         } catch(e) {
           // Silent ignore for polling errors

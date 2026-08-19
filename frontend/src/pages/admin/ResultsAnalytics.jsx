@@ -187,7 +187,7 @@ const ResultsAnalytics = () => {
               {stats.totalSubmissions > 0 ? (
                 <ResponsiveContainer>
                   <PieChart>
-                    <Pie data={pieData} cx="50%" cy="50%" innerRadius={60} outerRadius={100} dataKey="value" label>
+                    <Pie data={pieData} cx="50%" cy="50%" innerRadius="60%" outerRadius="80%" dataKey="value" label>
                       {pieData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}

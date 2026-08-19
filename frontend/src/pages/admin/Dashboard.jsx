@@ -119,8 +119,8 @@ const Dashboard = () => {
                     data={stats.chartData?.passVsFail || []}
                     cx="50%"
                     cy="50%"
-                    innerRadius={70}
-                    outerRadius={100}
+                    innerRadius="60%"
+                    outerRadius="80%"
                     paddingAngle={5}
                     dataKey="value"
                   >
