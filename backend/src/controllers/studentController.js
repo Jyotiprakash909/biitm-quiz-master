@@ -31,7 +31,7 @@ const verifyStudent = async (req, res, next) => {
     let student = await Student.findOne({ rollNumber });
 
     if (!student) {
-      if (exam.status !== 'OpenRegistration') {
+      if (exam.status !== 'OpenRegistration' && exam.status !== 'Active') {
         return res.json({ status: 'RegistrationClosed', examId: exam._id });
       }
       return res.json({ status: 'NeedsRegistration', examId: exam._id });
@@ -40,7 +40,7 @@ const verifyStudent = async (req, res, next) => {
     let session = await Session.findOne({ studentId: student._id, examId: exam._id });
 
     if (!session) {
-      if (exam.status !== 'OpenRegistration') {
+      if (exam.status !== 'OpenRegistration' && exam.status !== 'Active') {
         return res.json({ status: 'RegistrationClosed', examId: exam._id });
       }
       // If student is registered for platform but not for this specific exam session yet
